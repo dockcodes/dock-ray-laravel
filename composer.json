@@ -1,0 +1,40 @@
+{
+  "name": "dockcodes/dock-thor-laravel",
+  "type": "library",
+  "description": "Laravel bridge for the DockTHOR PHP SDK",
+  "keywords": ["laravel", "error-monitoring", "crash-reporting", "performance-monitoring"],
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Jacek Labudda",
+      "email": "j.labudda@dock.codes",
+      "homepage": "https://dock.codes"
+    }
+  ],
+  "require": {
+    "php": "^8.2",
+    "dockcodes/dock-thor": "^1.0",
+    "illuminate/contracts": "^10.0|^11.0|^12.0",
+    "illuminate/support": "^10.0|^11.0|^12.0"
+  },
+  "require-dev": {
+    "orchestra/testbench": "^8.0|^9.0|^10.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "Dock\\Thor\\Laravel\\": "src/"
+    }
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "Dock\\Thor\\Laravel\\ThorServiceProvider"
+      ]
+    }
+  },
+  "config": {
+    "sort-packages": true
+  },
+  "minimum-stability": "stable",
+  "prefer-stable": true
+}
