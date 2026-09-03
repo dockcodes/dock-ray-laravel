@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Dock\Thor\Laravel;
+namespace Dock\Ray\Laravel;
 
-use Dock\Thor\EventId;
-use Dock\Thor\Severity;
-use Dock\Thor\State\HubInterface;
-use Dock\Thor\State\Scope;
+use Dock\Ray\EventId;
+use Dock\Ray\Severity;
+use Dock\Ray\State\HubInterface;
+use Dock\Ray\State\Scope;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Support\Facades\App;
 
@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\App;
  * Zgłoszenie jest zawsze bezpieczne — awaria monitoringu nie może wywrócić
  * obsługi błędu, w której właśnie jesteśmy.
  */
-final class Thor
+final class Ray
 {
     public static function hub(): HubInterface
     {
@@ -64,7 +64,7 @@ final class Thor
 
     private static function shouldIgnore(\Throwable $exception): bool
     {
-        $ignored = (array) App::make(Repository::class)->get('thor.ignore_exceptions', []);
+        $ignored = (array) App::make(Repository::class)->get('ray.ignore_exceptions', []);
 
         foreach ($ignored as $class) {
             if ($exception instanceof $class) {

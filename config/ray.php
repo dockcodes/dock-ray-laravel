@@ -1,31 +1,31 @@
 <?php
 
 return [
-    'token' => env('THOR_TOKEN'),
+    'token' => env('RAY_TOKEN'),
 
-    'private_key' => env('THOR_PRIVATE_KEY'),
+    'private_key' => env('RAY_PRIVATE_KEY'),
 
-    'url' => env('THOR_URL', 'https://thor.dock.codes'),
+    'url' => env('RAY_URL', 'https://dockray.io'),
 
-    'environment' => env('THOR_ENVIRONMENT', env('APP_ENV', 'production')),
+    'environment' => env('RAY_ENVIRONMENT', env('APP_ENV', 'production')),
 
-    'release' => env('THOR_RELEASE'),
+    'release' => env('RAY_RELEASE'),
 
     /*
      | Ułamek żądań, dla których powstaje transakcja. 0 wyłącza pomiar ruchu
      | i zostawia samo raportowanie błędów.
      */
-    'traces_sample_rate' => (float) env('THOR_TRACES_SAMPLE_RATE', 0),
+    'traces_sample_rate' => (float) env('RAY_TRACES_SAMPLE_RATE', 0),
 
-    'sample_rate' => (float) env('THOR_SAMPLE_RATE', 1),
+    'sample_rate' => (float) env('RAY_SAMPLE_RATE', 1),
 
     /*
      | Dane osobowe użytkownika (identyfikator, e-mail, adres IP, user agent)
      | jadą do panelu tylko po jawnym włączeniu.
      */
-    'send_default_pii' => (bool) env('THOR_SEND_DEFAULT_PII', false),
+    'send_default_pii' => (bool) env('RAY_SEND_DEFAULT_PII', false),
 
-    'send_default_user' => (bool) env('THOR_SEND_DEFAULT_USER', true),
+    'send_default_user' => (bool) env('RAY_SEND_DEFAULT_USER', true),
 
     /*
      | Wyjątki, których nie zgłaszamy — poza tymi, które Laravel i tak pomija
@@ -43,7 +43,7 @@ return [
     ],
 
     'options' => [
-        'max_request_body_size' => env('THOR_MAX_REQUEST_BODY_SIZE', 'medium'),
-        'attach_stacktrace' => (bool) env('THOR_ATTACH_STACKTRACE', false),
+        'max_request_body_size' => env('RAY_MAX_REQUEST_BODY_SIZE', 'medium'),
+        'attach_stacktrace' => (bool) env('RAY_ATTACH_STACKTRACE', false),
     ],
 ];

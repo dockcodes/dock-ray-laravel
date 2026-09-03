@@ -1,7 +1,7 @@
 {
-  "name": "dockcodes/dock-thor-laravel",
+  "name": "dockcodes/dock-ray-laravel",
   "type": "library",
-  "description": "Laravel bridge for the DockTHOR PHP SDK",
+  "description": "Laravel bridge for the DockRay PHP SDK",
   "keywords": ["laravel", "error-monitoring", "crash-reporting", "performance-monitoring"],
   "license": "MIT",
   "authors": [
@@ -13,7 +13,7 @@
   ],
   "require": {
     "php": "^8.2",
-    "dockcodes/dock-thor": "^1.0",
+    "dockcodes/dock-ray": "^1.0",
     "illuminate/contracts": "^10.0|^11.0|^12.0",
     "illuminate/support": "^10.0|^11.0|^12.0"
   },
@@ -22,13 +22,13 @@
   },
   "autoload": {
     "psr-4": {
-      "Dock\\Thor\\Laravel\\": "src/"
+      "Dock\\Ray\\Laravel\\": "src/"
     }
   },
   "extra": {
     "laravel": {
       "providers": [
-        "Dock\\Thor\\Laravel\\ThorServiceProvider"
+        "Dock\\Ray\\Laravel\\RayServiceProvider"
       ]
     }
   },

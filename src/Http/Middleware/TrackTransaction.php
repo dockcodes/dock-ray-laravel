@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Dock\Thor\Laravel\Http\Middleware;
+namespace Dock\Ray\Laravel\Http\Middleware;
 
 use Closure;
-use Dock\Thor\Framework\HttpTransaction;
-use Dock\Thor\Laravel\Thor;
-use Dock\Thor\State\Scope;
+use Dock\Ray\Framework\HttpTransaction;
+use Dock\Ray\Laravel\Ray;
+use Dock\Ray\State\Scope;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -27,7 +27,7 @@ class TrackTransaction
             $request->fullUrl(),
             $request->method(),
             $this->startedAt(),
-            Thor::hub(),
+            Ray::hub(),
         );
 
         $transaction->measureHandling('laravel.handle');
@@ -56,18 +56,18 @@ class TrackTransaction
 
     private function shouldTrack(Request $request): bool
     {
-        if ((float) $this->config->get('thor.traces_sample_rate', 0) <= 0) {
+        if ((float) $this->config->get('ray.traces_sample_rate', 0) <= 0) {
             return false;
         }
 
-        $ignored = (array) $this->config->get('thor.ignore_transactions', []);
+        $ignored = (array) $this->config->get('ray.ignore_transactions', []);
 
         return $ignored === [] || ! $request->is(...$ignored);
     }
 
     private function rememberUser(Request $request): void
     {
-        if (! $this->config->get('thor.send_default_user', true)) {
+        if (! $this->config->get('ray.send_default_user', true)) {
             return;
         }
 
@@ -77,7 +77,7 @@ class TrackTransaction
             return;
         }
 
-        Thor::configureScope(static function (Scope $scope) use ($user): void {
+        Ray::configureScope(static function (Scope $scope) use ($user): void {
             $scope->setUser(array_filter([
                 'id' => method_exists($user, 'getAuthIdentifier') ? $user->getAuthIdentifier() : null,
                 'email' => $user->email ?? null,
