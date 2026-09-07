@@ -6,19 +6,19 @@
   "license": "MIT",
   "authors": [
     {
-      "name": "Jacek Labudda",
-      "email": "j.labudda@dock.codes",
-      "homepage": "https://dock.codes"
+      "name": "Jacek Sultan",
+      "email": "j.sultan@dock.codes",
+      "homepage": "https://dockray.io"
     }
   ],
   "require": {
     "php": "^8.2",
     "dockcodes/dock-ray": "^1.0",
-    "illuminate/contracts": "^10.0|^11.0|^12.0",
-    "illuminate/support": "^10.0|^11.0|^12.0"
+    "illuminate/contracts": "^10.0|^11.0|^12.0|^13.0",
+    "illuminate/support": "^10.0|^11.0|^12.0|^13.0"
   },
   "require-dev": {
-    "orchestra/testbench": "^8.0|^9.0|^10.0"
+    "orchestra/testbench": "^8.0|^9.0|^10.0|^10.0"
   },
   "autoload": {
     "psr-4": {
