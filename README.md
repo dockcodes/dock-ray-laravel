@@ -11,6 +11,8 @@ php artisan vendor:publish --tag=ray-config
 
 The service provider is discovered automatically.
 
+Requires PHP 7.4 or newer and Laravel 6 through 13.
+
 ## Configuration
 
 ```dotenv
@@ -24,7 +26,7 @@ requests, no errors. Everything else lives in `config/ray.php`.
 
 ## Reporting exceptions
 
-Laravel 11 and 12, in `bootstrap/app.php`:
+Laravel 11, 12 and 13, in `bootstrap/app.php`:
 
 ```php
 use Dock\Ray\Laravel\Ray;
@@ -34,12 +36,23 @@ use Dock\Ray\Laravel\Ray;
 })
 ```
 
-Laravel 10, in `app/Exceptions/Handler.php`:
+Laravel 8, 9 and 10, in `app/Exceptions/Handler.php`:
 
 ```php
 public function register(): void
 {
     $this->reportable(fn (Throwable $e) => Ray::report($e));
+}
+```
+
+Laravel 6 and 7, in the same file — they have no `register()` hook:
+
+```php
+public function report(Throwable $exception)
+{
+    Ray::report($exception);
+
+    parent::report($exception);
 }
 ```
 

@@ -32,7 +32,7 @@ final class Ray
 
         try {
             return self::hub()->captureException($exception);
-        } catch (\Throwable) {
+        } catch (\Throwable $failure) {
             return null;
         }
     }
@@ -41,7 +41,7 @@ final class Ray
     {
         try {
             return self::hub()->captureMessage($message, $level);
-        } catch (\Throwable) {
+        } catch (\Throwable $failure) {
             return null;
         }
     }
@@ -50,7 +50,7 @@ final class Ray
     {
         try {
             self::hub()->configureScope($callback);
-        } catch (\Throwable) {
+        } catch (\Throwable $failure) {
             // Kontekst jest dodatkiem do zdarzenia, nie powodem do awarii.
         }
     }

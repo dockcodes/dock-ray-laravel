@@ -14,7 +14,12 @@ use Symfony\Component\HttpFoundation\Response;
 
 class TrackTransaction
 {
-    public function __construct(private readonly Repository $config) {}
+    private Repository $config;
+
+    public function __construct(Repository $config)
+    {
+        $this->config = $config;
+    }
 
     public function handle(Request $request, Closure $next): Response
     {
