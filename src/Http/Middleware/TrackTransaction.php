@@ -6,10 +6,12 @@ namespace Dock\Ray\Laravel\Http\Middleware;
 
 use Closure;
 use Dock\Ray\Framework\HttpTransaction;
+use Dock\Ray\Laravel\Events\TransactionStarting;
 use Dock\Ray\Laravel\Ray;
 use Dock\Ray\State\Scope;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Event;
 use Symfony\Component\HttpFoundation\Response;
 
 class TrackTransaction
@@ -61,13 +63,21 @@ class TrackTransaction
 
     private function shouldTrack(Request $request): bool
     {
+        if (! $this->config->get('ray.token') || ! $this->config->get('ray.private_key')) {
+            return false;
+        }
+
         if ((float) $this->config->get('ray.traces_sample_rate', 0) <= 0) {
             return false;
         }
 
         $ignored = (array) $this->config->get('ray.ignore_transactions', []);
 
-        return $ignored === [] || ! $request->is(...$ignored);
+        if ($ignored !== [] && $request->is(...$ignored)) {
+            return false;
+        }
+
+        return Event::until(new TransactionStarting($request)) !== false;
     }
 
     private function rememberUser(Request $request): void
