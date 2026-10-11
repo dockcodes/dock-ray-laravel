@@ -49,7 +49,7 @@ class TrackTransaction
     }
 
     /**
-     * Nazwą transakcji jest wzorzec trasy, a nie adres — inaczej każdy
+     * Nazwą transakcji jest wzorzec trasy, a nie adres - inaczej każdy
      * identyfikator w ścieżce dawałby osobną transakcję i lista w panelu
      * rozsypałaby się na tysiące pozycji.
      */

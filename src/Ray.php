@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\App;
 /**
  * Wejście dla aplikacji: zgłoszenie wyjątku i dostęp do huba.
  *
- * Zgłoszenie jest zawsze bezpieczne — awaria monitoringu nie może wywrócić
+ * Zgłoszenie jest zawsze bezpieczne - awaria monitoringu nie może wywrócić
  * obsługi błędu, w której właśnie jesteśmy.
  */
 final class Ray

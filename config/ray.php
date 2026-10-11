@@ -1,11 +1,16 @@
 <?php
 
 return [
+    // Opt-in software inventory. Runs in the scheduler, never during HTTP requests.
+    'inventory' => [
+        'enabled' => (bool) env('RAY_INVENTORY', false),
+        'site_url' => env('RAY_INVENTORY_SITE_URL'), // defaults to app.url
+        'exclude_packages' => [], // e.g. ['company/*']
+    ],
+
     'token' => env('RAY_TOKEN'),
 
     'private_key' => env('RAY_PRIVATE_KEY'),
-
-    'url' => env('RAY_URL', 'https://dockray.io'),
 
     'environment' => env('RAY_ENVIRONMENT', env('APP_ENV', 'production')),
 
@@ -28,7 +33,7 @@ return [
     'send_default_user' => (bool) env('RAY_SEND_DEFAULT_USER', true),
 
     /*
-     | Wyjątki, których nie zgłaszamy — poza tymi, które Laravel i tak pomija
+     | Wyjątki, których nie zgłaszamy - poza tymi, które Laravel i tak pomija
      | we własnej liście `dontReport`.
      */
     'ignore_exceptions' => [],

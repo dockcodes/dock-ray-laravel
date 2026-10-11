@@ -18,11 +18,10 @@ Requires PHP 7.4 or newer and Laravel 6 through 13.
 ```dotenv
 RAY_TOKEN=project-token
 RAY_PRIVATE_KEY=project-private-key
-RAY_URL=https://dockray.io
 RAY_TRACES_SAMPLE_RATE=1
 ```
 
-Without `RAY_TOKEN` and `RAY_PRIVATE_KEY` the package stays inert — no
+Without `RAY_TOKEN` and `RAY_PRIVATE_KEY` the package stays inert - no
 requests, no errors. Everything else lives in `config/ray.php`.
 
 ## Reporting exceptions
@@ -46,7 +45,7 @@ public function register(): void
 }
 ```
 
-Laravel 6 and 7, in the same file — they have no `register()` hook:
+Laravel 6 and 7, in the same file - they have no `register()` hook:
 
 ```php
 public function report(Throwable $exception)
@@ -112,7 +111,6 @@ configure exception reporting separately as described above.
 Set both project credentials and `RAY_TRACES_SAMPLE_RATE=1` for the initial test.
 The rate defaults to `0` (disabled); `1` measures every eligible request and `0.1`
 measures approximately 10%. Incomplete credentials disable tracking.
-`RAY_URL` is the base server URL, without `/api/v1` or a project token.
 
 After deployment or environment changes:
 
@@ -177,7 +175,7 @@ The IP address and user agent are only attached when
 ## Queues and console
 
 Both run outside the middleware stack, so they report errors but produce no
-transactions. The hub is a singleton for the whole process — a long-running
+transactions. The hub is a singleton for the whole process - a long-running
 queue worker keeps one client and one connection.
 
 ## Tests
@@ -202,3 +200,59 @@ for all supported Laravel/PHP versions.
 ## License
 
 MIT.
+
+## Opt-in vulnerability monitoring (bridge 1.3+, PHP SDK 1.4+)
+
+Enable package inventory with one option, alongside your existing project credentials:
+
+```dotenv
+RAY_INVENTORY=true
+```
+
+The bridge uses the configured `APP_URL` (`config('app.url')`) as the site URL.
+It must match the production or development URL configured for the DockRay project.
+Override it with `RAY_INVENTORY_SITE_URL` when needed. If configuration is cached,
+rebuild it with `php artisan config:cache` after changing these settings.
+Existing published `config/ray.php` files can add the following optional block;
+the package supplies defaults for installations without the block:
+
+```php
+'inventory' => [
+    'enabled' => (bool) env('RAY_INVENTORY', false),
+    'site_url' => env('RAY_INVENTORY_SITE_URL'),
+    'exclude_packages' => ['company/*'],
+],
+```
+
+Keep Laravel's normal scheduler running (`php artisan schedule:run` every minute).
+The provider adds an hourly inventory check automatically; no requests are made
+while serving HTTP pages or booting the provider. A changed snapshot is sent on
+the next check; an unchanged snapshot is sent every 12 hours. To report immediately
+on deployment, or to check configuration:
+
+```shell
+php artisan ray:inventory --force
+```
+
+`--force` still respects retry backoff. Disable reporting with `RAY_INVENTORY=false`.
+The command prints only a sanitized status, never keys or the package payload.
+
+The report includes PHP/agent/framework versions, the configured site URL, and
+only names and versions of installed production Composer packages. It requires
+`composer.lock` and installed Composer metadata, excludes dev dependencies and
+the root application, and supports exclusion patterns for private namespaces.
+It does not include code, `.env`, configuration, repository URLs, paths or users.
+It does not scan PHP extensions or the operating system. Excluded packages cannot
+be checked for vulnerabilities.
+
+Delivery uses verified HTTPS, Bearer authentication, no redirects, short timeouts,
+size limits, retry backoff and a lock. Local timing/hash state is stored privately
+under `storage/app/dockray/inventory`; keep that directory persistent and outside
+the public web root. For multi-server deployments, run the scheduler on one
+server or use a shared filesystem for this lock.
+
+DockRay maps Composer packages to its vulnerability database and closes findings
+after a fixed package version is reported. Confirmed findings use the project's
+existing notification recipients and channels, duplicate suppression and alert
+scheduler (currently every 15 minutes). Reporting is opt-in in every environment;
+use the appropriate project URL and credentials for each deployment.
