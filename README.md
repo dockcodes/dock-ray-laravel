@@ -256,3 +256,106 @@ after a fixed package version is reported. Confirmed findings use the project's
 existing notification recipients and channels, duplicate suppression and alert
 scheduler (currently every 15 minutes). Reporting is opt-in in every environment;
 use the appropriate project URL and credentials for each deployment.
+
+## Opt-in security report (bridge 1.4+)
+
+Off by default. Enable it alongside your existing project credentials:
+
+```dotenv
+RAY_SECURITY=true
+```
+
+Existing published `config/ray.php` files can add the optional block below; the
+package supplies the defaults when it is missing:
+
+```php
+'security' => [
+    'enabled' => (bool) env('RAY_SECURITY', false),
+    'site_url' => env('RAY_SECURITY_SITE_URL'), // defaults to the inventory site URL, then APP_URL
+],
+```
+
+Keep Laravel's scheduler running. The provider adds `ray:security` every five
+minutes, in the background and without overlapping; the command itself decides
+whether a report is due: every 6 hours (or the interval DockRay answers with,
+clamped to 1–24 hours), on the first tick at least a minute after a deploy changed
+`composer.lock` or `RAY_RELEASE`, and an hour after a scan that stopped at its limit. Nothing
+is scanned or sent while serving HTTP pages or booting the provider. To report
+now, or to see the open findings:
+
+```shell
+php artisan ray:security --force
+```
+
+`--force` still respects retry backoff. The command prints a sanitized status, the
+number of open findings per severity and the findings DockRay returned; everything
+from the server is stripped of control characters and escaped before printing.
+
+What the report contains (`POST /api/v1/{token}/security`):
+
+| Section | Content |
+|---|---|
+| `groups` | `package/vendor`: sha256 digest of the PHP/JS files in `vendor/`, versioned by the sha256 of `composer.lock` (`vendor/composer/` and `vendor/autoload.php` are left out — every `composer dump-autoload` rewrites them). `app/app`: the same over `app/`, `bootstrap/` (without `bootstrap/cache/`), `config/`, `routes/` and `public/`, only when `RAY_RELEASE` is set |
+| `files` | sha256 and size of `public/index.php`, `artisan`, `.env`, `bootstrap/app.php`, `public/.htaccess`, `public/.user.ini` |
+| `suspicious` | PHP files in `storage/app/public` and `public/storage`, files there that start with `<?php` under another extension, `.htaccess`/`.user.ini` there that make the server run PHP (`php_handler`), hidden directories there, PHP files in `public/` other than `index.php`, and backdoor indicator *names* found in them |
+| `posture` | `code_writable`, `display_errors`, `exec_available` (see below), `debug_mode` (`app.debug`), `debug_tools` (Ignition, Telescope or Debugbar installed) |
+
+It never contains file contents, absolute paths, users or configuration values —
+hashing `.env` tells DockRay when the file changed and nothing else. DockRay records
+the first report as the baseline; afterwards a changed digest without a version
+change, a changed sensitive file or a suspicious file becomes a finding.
+
+`code_writable`, `display_errors` and `exec_available` depend on the PHP SAPI, its
+`php.ini` and the process user, so the scheduler's console process cannot measure
+them. With the report enabled, the provider measures them after a page view (not
+AJAX, JSON or `api/*` requests), at most once an hour, and keeps them in the default
+cache store; the report uses them while they are younger than 30 days and otherwise
+leaves the three keys out, so DockRay keeps its earlier verdict. Use a persistent
+cache store shared by the web server and the scheduler (`file`, `redis`,
+`database`…); with the `array` store the keys are never sent. `display_errors` is
+the value PHP started the request with — Laravel switches the setting off once it
+boots, so that value decides whether a bootstrap error reaches visitors.
+
+Hashing is expensive, so per-file hashes are cached by size, mtime and ctime. The
+upload directories are walked on every run, but file contents are read only for files
+whose ctime is at or after the start of the previous run, plus a weekly full pass
+that gets ten seconds per run and continues from a cursor; earlier findings are
+carried over for files whose ctime has not changed, so every report is complete.
+A walk that reaches 300,000 entries, or a scan that reaches 20 seconds or 200,000
+files, is marked truncated: only groups hashed completely are sent, DockRay keeps
+the findings it could not re-check, and the next run continues from the cache. State and cache live privately under
+`storage/app/dockray/security`; keep that directory persistent and outside the web
+root, and run the scheduler on one server (or share that directory) in multi-server
+deployments.
+
+Delivery uses verified HTTPS only, Bearer authentication, no redirects, a 5 s connect
+and 20 s total timeout, a 2 MB body limit, retry backoff and a lock.
+
+## Early fatal errors
+
+The bridge reports errors once Laravel has booted. A fatal error before that — a
+parse error in `bootstrap/app.php`, a broken file in `vendor/`, memory exhausted while
+providers register — never reaches it. For those, the package ships a dependency-free
+file (PHP 7.4+) to load with `auto_prepend_file`, in `php.ini`, `public/.user.ini` or
+the PHP-FPM pool:
+
+```ini
+auto_prepend_file=/absolute/path/to/app/vendor/dockcodes/dock-ray-laravel/resources/early-fatal.php
+```
+
+It only registers a shutdown function. On a fatal error (`E_ERROR`, `E_PARSE`,
+`E_CORE_ERROR`, `E_COMPILE_ERROR`, `E_USER_ERROR`, `E_RECOVERABLE_ERROR`) it waits
+until every other shutdown function ran — Laravel's error page, the SDK's own handler
+— and sends one event to the regular ingest endpoint with `sdk.name`
+`dockray.laravel.early`, unless a DockRay SDK client with its error listeners is
+already active (then the bridge reported the error itself). It sends at most one
+report per distinct error every ten seconds, never prints anything and never throws.
+
+Credentials come from `RAY_TOKEN`, `RAY_PRIVATE_KEY`, `RAY_URL` (default
+`https://dockray.io`), `RAY_ENVIRONMENT` (falls back to `APP_ENV`) and `RAY_RELEASE`.
+Values Laravel loaded from `.env` are used when the error happened after that, but
+with a cached configuration Laravel never reads `.env` — set the variables in the
+server environment (PHP-FPM `env[RAY_TOKEN]`, the container environment) to cover the
+earliest errors. Without credentials the file does nothing. It sends over HTTPS only
+(plain HTTP only to `localhost`), with a 2 s connect and 3 s total timeout, after the
+response was flushed to the visitor.

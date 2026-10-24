@@ -8,6 +8,12 @@ return [
         'exclude_packages' => [], // e.g. ['company/*']
     ],
 
+    // Opt-in security report (file integrity, upload directories, settings). Scheduler only.
+    'security' => [
+        'enabled' => (bool) env('RAY_SECURITY', false),
+        'site_url' => env('RAY_SECURITY_SITE_URL'), // defaults to the inventory site URL, then app.url
+    ],
+
     'token' => env('RAY_TOKEN'),
 
     'private_key' => env('RAY_PRIVATE_KEY'),
